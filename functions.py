@@ -18,7 +18,15 @@ def m_xy_I(f_i, I_s, c_ix, c_iy, Q):
         div += f_i
     return (num/div)
 
-def m_xy_north(m_xy_I, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
+def m_xy_north(m_xy_I, 
+               c_ix, 
+               c_iy, 
+               u_max, 
+               I_s, 
+               O_s, 
+               a_s, 
+               w_i, 
+               omega):
     Is_up = 0
     Is_down = 0
     Os_down = 0
@@ -36,7 +44,14 @@ def m_xy_north(m_xy_I, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
     m_xy = (Is_up - m_xy_I*Os_up)/(m_xy_I*(1-omega)*Os_down - Is_down)
     return m_xy
 
-def m_xy_wall(m_xy_I, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
+def m_xy_wall(m_xy_I, 
+              c_ix, 
+              c_iy, 
+              I_s, 
+              O_s, 
+              a_s, 
+              w_i, 
+              omega):
     Is_up = 0
     Is_down = 0
     Os_down = 0
@@ -50,7 +65,16 @@ def m_xy_wall(m_xy_I, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
     m_xy = (Is_up - m_xy_I*Os_up)/(m_xy_I*(1-omega)*Os_down - Is_down)
     return m_xy
     
-def rho_north(m_xy, f_i, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
+def rho_north(m_xy, 
+              f_i, 
+              c_ix, 
+              c_iy, 
+              u_max, 
+              I_s, 
+              O_s, 
+              a_s, 
+              w_i, 
+              omega):
     rho_I_rho = 0
     rho_I = 0
     for i in O_s:
@@ -64,7 +88,15 @@ def rho_north(m_xy, f_i, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
     rho = rho_I/rho_I_rho
     return rho
 
-def rho_wall(m_xy, f_i, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
+def rho_wall(m_xy, 
+             f_i, 
+             c_ix, 
+             c_iy, 
+             I_s, 
+             O_s, 
+             a_s, 
+             w_i, 
+             omega):
     rho_I_rho = 0
     rho_I = 0
     for i in O_s:
@@ -75,3 +107,10 @@ def rho_wall(m_xy, f_i, c_ix, c_iy, u_max, I_s, O_s, a_s, w_i, omega):
     
     rho = rho_I/rho_I_rho
     return rho
+
+def rho_corner(f_i, I_s):
+    rho = 0
+    for i in I_s:
+        rho += f_i[i]
+    return rho
+
