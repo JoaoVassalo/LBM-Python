@@ -12,7 +12,7 @@ grid_num = Nx*Ny
 
 #Definindo tempo de simulação.
 tf = 10000
-t_interval = 10
+t_interval = 100
 
 #Cálculo de tau.
 Re = 1000
