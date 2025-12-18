@@ -1,42 +1,13 @@
 #Importando as bibliotecas
 import numpy as np
-from constants import *
+from physics import *
+from stencil import *
+from geometry import *
 from functions import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-#Definindo o tamanho do grid
-Nx = 65
-Ny = 65
-grid_num = Nx*Ny
 
-#Definindo tempo de simulação.
-tf = 10000
-t_interval = 100
-
-#Cálculo de tau.
-Re = 1000
-u_max = 0.0256
-delta_t = 1
-
-ni = u_max*Ny/Re
-
-tau = ni * a_s ** 2 + delta_t/2
-
-omega = tau**(-1)
-
-#Definindo velocidade e densidade inicial.
-rho = np.ones(grid_num)
-ux = np.zeros(grid_num)
-uy = np.zeros(grid_num)
-mxx = np.zeros(grid_num)
-myy = np.zeros(grid_num)
-mxy = np.zeros(grid_num)
-
-
-rho_plot = []
-ux_plot = []
-uy_plot = []
 
 #Cálculo inicial de f de equilíbrio.
 f_eq = np.zeros(Nx*Ny*Q)

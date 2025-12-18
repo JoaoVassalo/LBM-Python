@@ -1,36 +1,47 @@
-from constants import *
+from stencil import *
+from geometry import *
+from physics import *
 
-def grid_id(x, y, Nx):
+def init_domain():
+    #Definindo velocidades, densidade e momentos iniciais.
+    rho = np.ones(grid_num)
+    ux = np.zeros(grid_num)
+    uy = np.zeros(grid_num)
+    mxx = np.zeros(grid_num)
+    myy = np.zeros(grid_num)
+    mxy = np.zeros(grid_num)
+
+    rho_plot = []
+    ux_plot = []
+    uy_plot = []
+    
+    return rho, ux, uy, mxx, myy, mxy, rho_plot, ux_plot, uy_plot
+
+def grid_id(x, y):
     return (x + Nx*y)
 
-def pop_id(g_id, i, Q):
+def pop_id(g_id, i):
     return (g_id*Q + i)
 
-def equilibrium(rho, w_i, a_s, ux, c_ix, uy, c_iy):
+def equilibrium(rho, ux, uy):
     return rho*w_i*( 1 + a_s**2*( ux*c_ix + uy*c_iy ) 
                     + a_s**4/2*( ( ux*c_ix + uy*c_iy )**2 
                                 - ( ux**2 + uy**2 )/a_s**2 ) )
 
-def m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id):
+def m_xy_I(f_i, I_s, g_id):
     num = 0
     div = 0
 
     for i in I_s:
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         num += f_i[p_id] * c_ix[i]*c_iy[i]
         div += f_i[p_id]
 
     return (num/div)
 
 def m_xy_north(m_xy_I, 
-               c_ix, 
-               c_iy, 
-               u_max, 
                I_s, 
-               O_s, 
-               a_s, 
-               w_i, 
-               omega):
+               O_s):
     Is_up = 0
     Is_down = 0
     Os_down = 0
@@ -55,10 +66,7 @@ def m_xy_wall(m_xy_I,
               c_ix, 
               c_iy, 
               I_s, 
-              O_s, 
-              a_s, 
-              w_i, 
-              omega):
+              O_s):
     Is_up = 0
     Is_down = 0
     Os_down = 0
@@ -74,15 +82,9 @@ def m_xy_wall(m_xy_I,
     
 def rho_north(m_xy, 
               f_i, 
-              c_ix, 
-              c_iy, 
               ux, 
               I_s, 
-              O_s, 
-              a_s, 
-              w_i, 
-              omega,
-              Q,
+              O_s,
               g_id):
     rho_I_rho = 0
     rho_I = 0
@@ -94,7 +96,7 @@ def rho_north(m_xy,
                              w_i[i]*(1-omega)*a_s**4*m_xy*c_ix[i]*c_iy[i])
         
     for i in I_s:
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         rho_I += f_i[p_id]
     
     rho = rho_I/rho_I_rho
@@ -102,14 +104,8 @@ def rho_north(m_xy,
 
 def rho_wall(m_xy, 
              f_i, 
-             c_ix, 
-             c_iy, 
              I_s, 
              O_s, 
-             a_s, 
-             w_i, 
-             omega,
-             Q,
              g_id):
     rho_I_rho = 0
     rho_I = 0
@@ -117,16 +113,16 @@ def rho_wall(m_xy,
         rho_I_rho += (1-omega)*w_i[i]*a_s**4*m_xy*c_ix[i]*c_iy[i] + w_i[i]
     
     for i in I_s:
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         rho_I += f_i[p_id]
     
     rho = rho_I/rho_I_rho
     return rho
 
-def rho_corner(f_i, I_s, O_s, Q, g_id):
+def rho_corner(f_i, I_s, O_s, g_id):
     rho_I = 0
     for i in I_s:
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         rho_I += f_i[p_id]
     
     sum_wi = 0
@@ -135,19 +131,19 @@ def rho_corner(f_i, I_s, O_s, Q, g_id):
 
     return rho_I/sum_wi
 
-def calc_rho(f_i, Q, g_id):
+def calc_rho(f_i, g_id):
     rho = 0
     for i in range(Q):
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         rho += f_i[p_id]
 
     return rho
 
-def calc_velocity(f_i, c_ix, c_iy, Q, g_id, rho):
+def calc_velocity(f_i, g_id):
     u_x = 0
     u_y = 0
     for i in range(Q):
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         u_x += f_i[p_id]*c_ix[i]
         u_y += f_i[p_id]*c_iy[i]
     u_x *= 1/rho
@@ -155,12 +151,12 @@ def calc_velocity(f_i, c_ix, c_iy, Q, g_id, rho):
 
     return u_x, u_y
 
-def calc_momentum(f_i, c_ix, c_iy, Q, g_id, rho, a_s):
+def calc_momentum(f_i, g_id):
     m_xx = 0
     m_yy = 0
     m_xy = 0
     for i in range(Q):
-        p_id = pop_id(g_id, i, Q)
+        p_id = pop_id(g_id, i)
         m_xx += f_i[p_id]*(c_ix**2 - 1/(a_s**2))
         m_yy += f_i[p_id]*(c_iy**2 - 1/(a_s**2))
         m_xy += f_i[p_id]*(c_ix*c_iy)
