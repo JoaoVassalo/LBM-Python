@@ -7,22 +7,9 @@ from functions import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
+rho, ux, uy, mxx, myy, mxy, rho_plot, ux_plot, uy_plot = init_domain()
 
 
-#Cálculo inicial de f de equilíbrio.
-f_eq = np.zeros(Nx*Ny*Q)
-
-for x in range(Nx):
-    for y in range(Ny):
-        for i in range(Q):
-            g_id = grid_id(x, y, Nx)
-            f_eq[pop_id(g_id, i, Q)] = equilibrium(rho[g_id], w_i[i], a_s, ux[g_id], 
-                                                       c_ix[i], uy[g_id], c_iy[i])
-
-f_i = np.copy(f_eq)
-
-col = np.zeros(len(f_i))
-f_col = np.zeros(len(f_i))
 
 for t in range(tf):
     
@@ -30,9 +17,9 @@ for t in range(tf):
     #Colisão.
     for x in range(Nx):
         for y in range(Ny):
-            g_id = grid_id(x, y, Nx)
+            g_id = grid_id(x, y)
             for i in range(Q):
-                p_id = pop_id(g_id, i, Q)
+                p_id = pop_id(g_id, i)
                 col[p_id] = - (f_i[p_id] - f_eq[p_id])/tau
                 f_col[p_id] = f_i[p_id] + col[p_id]
 
@@ -45,25 +32,25 @@ for t in range(tf):
                 y_to = (y + c_iy[i] + Ny) % Ny
 
 
-                idx_to   = pop_id(grid_id(x_to, y_to, Nx), i, Q)
-                idx_from = pop_id(grid_id(x, y, Nx), i, Q)
+                idx_to   = pop_id(grid_id(x_to, y_to), i)
+                idx_from = pop_id(grid_id(x, y), i)
 
                 f_i[idx_to] = f_col[idx_from]
 
     for x in range(Nx):
         for y in range(Ny):
-            g_id = grid_id(x, y, Nx)
+            g_id = grid_id(x, y)
 
             if x==0 and y==0:   #Sudoeste
                 I_s = [0, 3, 4, 7]
                 O_s = [0, 1, 2, 5]
-                rho[g_id] = rho_corner(f_i, I_s, O_s, Q, g_id)
+                rho[g_id] = rho_corner(f_i, I_s, O_s, g_id)
                 ux[g_id] = 0
                 uy[g_id] = 0
                 mxy = 0
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -72,13 +59,13 @@ for t in range(tf):
             elif x==(Nx-1) and y==0:    #Sudeste
                 I_s = [0, 1, 4, 8]
                 O_s = [0, 2, 3, 6]
-                rho[g_id] = rho_corner(f_i, I_s, O_s, Q, g_id)
+                rho[g_id] = rho_corner(f_i, I_s, O_s, g_id)
                 ux[g_id] = 0
                 uy[g_id] = 0
                 mxy = 0
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -89,12 +76,12 @@ for t in range(tf):
                 O_s = [0, 1, 4, 8]
                 ux[g_id] = u_max
                 uy[g_id] = 0
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
-                mxy = m_xy_north(mxy_I, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_north(mxy, f_i, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
+                mxy = m_xy_north(mxy_I, ux[g_id], I_s, O_s, omega)
+                rho[g_id] = rho_north(mxy, f_i, ux[g_id], I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -105,12 +92,12 @@ for t in range(tf):
                 O_s = [0, 3, 4, 7]
                 ux[g_id] = u_max
                 uy[g_id] = 0
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
-                mxy = m_xy_north(mxy_I, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_north(mxy, f_i, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
+                mxy = m_xy_north(mxy_I, ux[g_id], I_s, O_s, omega)
+                rho[g_id] = rho_north(mxy, f_i, ux[g_id], I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -120,14 +107,14 @@ for t in range(tf):
             elif y==0:  #Sul
                 I_s = [0, 1, 3, 4, 7, 8]
                 O_s = [0, 1, 2, 3, 5, 6]
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
                 ux[g_id] = 0
                 uy[g_id] = 0
-                mxy = m_xy_wall(mxy_I, c_ix, c_iy, I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_wall(mxy, f_i, c_ix, c_iy, I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy = m_xy_wall(mxy_I, I_s, O_s, omega)
+                rho[g_id] = rho_wall(mxy, f_i, I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -136,14 +123,14 @@ for t in range(tf):
             elif y==(Ny-1): #Norte
                 I_s = [0, 1, 2, 3, 5, 6]
                 O_s = [0, 1, 3, 4, 7, 8]
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
                 ux[g_id] = u_max
                 uy[g_id] = 0
-                mxy = m_xy_north(mxy_I, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_north(mxy, f_i, c_ix, c_iy, ux[g_id], I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy = m_xy_north(mxy_I, ux[g_id], I_s, O_s, omega)
+                rho[g_id] = rho_north(mxy, f_i, ux[g_id], I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -152,14 +139,14 @@ for t in range(tf):
             elif x==0:  #Oeste
                 I_s = [0, 2, 3, 4, 6, 7]
                 O_s = [0, 1, 2, 4, 5, 8]
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
                 ux[g_id] = 0
                 uy[g_id] = 0
-                mxy = m_xy_wall(mxy_I, c_ix, c_iy, I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_wall(mxy, f_i, c_ix, c_iy, I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy = m_xy_wall(mxy_I, I_s, O_s, omega)
+                rho[g_id] = rho_wall(mxy, f_i, I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
@@ -168,30 +155,30 @@ for t in range(tf):
             elif x==(Nx-1): #Leste
                 I_s = [0, 1, 2, 4, 5, 8]
                 O_s = [0, 2, 3, 4, 6, 7]
-                mxy_I = m_xy_I(f_i, I_s, c_ix, c_iy, Q, g_id)
+                mxy_I = m_xy_I(f_i, I_s, g_id)
                 ux[g_id] = 0
                 uy[g_id] = 0
-                mxy = m_xy_wall(mxy_I, c_ix, c_iy, I_s, O_s, a_s, w_i, omega)
-                rho[g_id] = rho_wall(mxy, f_i, c_ix, c_iy, I_s, O_s, a_s, w_i, omega, Q, g_id)
+                mxy = m_xy_wall(mxy_I, I_s, O_s, omega)
+                rho[g_id] = rho_wall(mxy, f_i, I_s, O_s, omega, g_id)
 
                 for i in range(Q):
-                    p_id = pop_id(g_id, i, Q)
+                    p_id = pop_id(g_id, i)
                     f_i[p_id] = w_i[i] * rho[g_id] * (1 + 
                                                       a_s**2 * (ux[g_id]*c_ix[i] + uy[g_id]*c_iy[i]) + 
                                                       a_s**4/2 * (ux[g_id]**2*(c_ix[i]**2 - 1/a_s**2) + uy[g_id]**2*(c_iy[i]**2 - 1/a_s**2)) + 
                                                       a_s**4 * (mxy*c_ix[i]*c_iy[i]) )
 
             else:   #Centro
-                rho[g_id] = calc_rho(f_i, Q, g_id)
-                ux[g_id], uy[g_id] = calc_velocity(f_i, c_ix, c_iy, Q, g_id, rho[g_id])
+                rho[g_id] = calc_rho(f_i, g_id)
+                ux[g_id], uy[g_id] = calc_velocity(f_i, g_id, rho[g_id])
 
 
 
     for x in range(Nx):
         for y in range(Ny):
             for i in range(Q):
-                g_id = grid_id(x, y, Nx)
-                f_eq[pop_id(g_id, i, Q)] = equilibrium(rho[g_id], w_i[i], a_s, ux[g_id], 
+                g_id = grid_id(x, y)
+                f_eq[pop_id(g_id, i)] = equilibrium(rho[g_id], w_i[i], a_s, ux[g_id], 
                                                         c_ix[i], uy[g_id], c_iy[i])
 
 

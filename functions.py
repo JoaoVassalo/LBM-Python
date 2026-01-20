@@ -14,7 +14,18 @@ def init_domain():
     rho_plot = []
     ux_plot = []
     uy_plot = []
-    
+
+    for x in range(Nx):
+        for y in range(Ny):
+            g_id = grid_id(x, y)
+            for i in range(Q):
+                mxx[g_id] += equilibrium(rho[g_id], ux[g_id], uy[g_id], i)*(c_ix[i]**2 - 1/(a_s**2))
+                myy[g_id] += equilibrium(rho[g_id], ux[g_id], uy[g_id], i)*(c_iy[i]**2 - 1/(a_s**2))
+                mxy[g_id] += equilibrium(rho[g_id], ux[g_id], uy[g_id], i)*(c_ix[i]*c_iy[i])
+            mxx[g_id] *= 1/rho[g_id]
+            myy[g_id] *= 1/rho[g_id]
+            mxy[g_id] *= 1/rho[g_id]
+            
     return rho, ux, uy, mxx, myy, mxy, rho_plot, ux_plot, uy_plot
 
 def grid_id(x, y):
@@ -23,9 +34,9 @@ def grid_id(x, y):
 def pop_id(g_id, i):
     return (g_id*Q + i)
 
-def equilibrium(rho, ux, uy):
-    return rho*w_i*( 1 + a_s**2*( ux*c_ix + uy*c_iy ) 
-                    + a_s**4/2*( ( ux*c_ix + uy*c_iy )**2 
+def equilibrium(rho, ux, uy, i):
+    return rho*w_i[i]*( 1 + a_s**2*( ux*c_ix[i] + uy*c_iy[i] ) 
+                    + a_s**4/2*( ( ux*c_ix[i] + uy*c_iy[i] )**2 
                                 - ( ux**2 + uy**2 )/a_s**2 ) )
 
 def m_xy_I(f_i, I_s, g_id):
@@ -139,7 +150,7 @@ def calc_rho(f_i, g_id):
 
     return rho
 
-def calc_velocity(f_i, g_id):
+def calc_velocity(f_i, rho, g_id):
     u_x = 0
     u_y = 0
     for i in range(Q):
@@ -151,7 +162,7 @@ def calc_velocity(f_i, g_id):
 
     return u_x, u_y
 
-def calc_momentum(f_i, g_id):
+def calc_momentum(f_i, rho, g_id):
     m_xx = 0
     m_yy = 0
     m_xy = 0
